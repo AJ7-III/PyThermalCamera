@@ -29,16 +29,11 @@ import cv2
 import numpy as np
 import argparse
 import time
-import io
+import io  # retained for backward compatibility, though unused
 
 #We need to know if we are running on the Pi, because openCV behaves a little oddly on all the builds!
 #https://raspberrypi.stackexchange.com/questions/5100/detect-that-a-python-program-is-running-on-the-pi
-def is_raspberrypi():
-    try:
-        with io.open('/sys/firmware/devicetree/base/model', 'r') as m:
-            if 'raspberry pi' in m.read().lower(): return True
-    except Exception: pass
-    return False
+from .utils import is_raspberrypi
 
 isPi = is_raspberrypi()
 
