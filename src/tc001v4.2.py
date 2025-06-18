@@ -23,12 +23,14 @@ print('r t: Record and Stop')
 print('p : Snapshot')
 print('m : Cycle through ColorMaps')
 print('h : Toggle HUD')
+print('g : Toggle Graph display')
 
 import cv2
 import numpy as np
 import argparse
 import time
 import io
+import matplotlib.pyplot as plt
 
 #We need to know if we are running on the Pi, because openCV behaves a little oddly on all the builds!
 #https://raspberrypi.stackexchange.com/questions/5100/detect-that-a-python-program-is-running-on-the-pi
@@ -72,12 +74,28 @@ font=cv2.FONT_HERSHEY_SIMPLEX
 dispFullscreen = False
 cv2.namedWindow('Thermal',cv2.WINDOW_GUI_NORMAL)
 cv2.resizeWindow('Thermal', newWidth,newHeight)
+
+def mouse_event(event, x, y, flags, param):
+        global cross_x, cross_y
+        if event == cv2.EVENT_LBUTTONDOWN:
+                cross_x = x
+                cross_y = y
+
+cv2.setMouseCallback('Thermal', mouse_event)
 rad = 0 #blur radius
 threshold = 2
 hud = True
 recording = False
 elapsed = "00:00:00"
 snaptime = "None"
+
+# Crosshair position and measurement history
+cross_x = int(newWidth / 2)
+cross_y = int(newHeight / 2)
+temps = []
+timeseries = []
+graph_enabled = False
+plt.ion()
 
 def rec():
 	now = time.strftime("%Y%m%d--%H%M%S")
@@ -101,9 +119,13 @@ while(cap.isOpened()):
 		#now parse the data from the bottom frame and convert to temp!
 		#https://www.eevblog.com/forum/thermal-imaging/infiray-and-their-p2-pro-discussion/200/
 		#Huge props to LeoDJ for figuring out how the data is stored and how to compute temp from it.
-		#grab data from the center pixel...
-		hi = thdata[96][128][0]
-		lo = thdata[96][128][1]
+		#grab data from the selected pixel
+		raw_x = int(cross_x / scale)
+		raw_y = int(cross_y / scale)
+		raw_x = max(0, min(width-1, raw_x))
+		raw_y = max(0, min(height-1, raw_y))
+		hi = thdata[raw_y][raw_x][0]
+		lo = thdata[raw_y][raw_x][1]
 		#print(hi,lo)
 		lo = lo*256
 		rawtemp = hi+lo
@@ -111,8 +133,19 @@ while(cap.isOpened()):
 		temp = (rawtemp/64)-273.15
 		temp = round(temp,2)
 		#print(temp)
-		#break
-
+		temps.append(temp)
+		timeseries.append(time.time())
+		if len(temps) > 100:
+			temps.pop(0)
+			timeseries.pop(0)
+			if graph_enabled:
+				plt.cla()
+				plt.plot(timeseries, temps, color='red')
+				plt.xlabel('Time')
+				plt.ylabel('Temp C')
+				plt.pause(0.001)
+			#break
+			
 		#find the max temperature in the frame
 		lomax = thdata[...,1].max()
 		posmax = thdata[...,1].argmax()
@@ -193,20 +226,16 @@ while(cap.isOpened()):
 
 		#print(heatmap.shape)
 
-		# draw crosshairs
-		cv2.line(heatmap,(int(newWidth/2),int(newHeight/2)+20),\
-		(int(newWidth/2),int(newHeight/2)-20),(255,255,255),2) #vline
-		cv2.line(heatmap,(int(newWidth/2)+20,int(newHeight/2)),\
-		(int(newWidth/2)-20,int(newHeight/2)),(255,255,255),2) #hline
-
-		cv2.line(heatmap,(int(newWidth/2),int(newHeight/2)+20),\
-		(int(newWidth/2),int(newHeight/2)-20),(0,0,0),1) #vline
-		cv2.line(heatmap,(int(newWidth/2)+20,int(newHeight/2)),\
-		(int(newWidth/2)-20,int(newHeight/2)),(0,0,0),1) #hline
+		# draw crosshairs at selected point
+		cv2.line(heatmap,(cross_x, cross_y+20),(cross_x, cross_y-20),(255,255,255),2)
+		cv2.line(heatmap,(cross_x+20, cross_y),(cross_x-20, cross_y),(255,255,255),2)
+		
+		cv2.line(heatmap,(cross_x, cross_y+20),(cross_x, cross_y-20),(0,0,0),1)
+		cv2.line(heatmap,(cross_x+20, cross_y),(cross_x-20, cross_y),(0,0,0),1)
 		#show temp
-		cv2.putText(heatmap,str(temp)+' C', (int(newWidth/2)+10, int(newHeight/2)-10),\
+		cv2.putText(heatmap,str(temp)+' C', (cross_x+10, cross_y-10),\
 		cv2.FONT_HERSHEY_SIMPLEX, 0.45,(0, 0, 0), 2, cv2.LINE_AA)
-		cv2.putText(heatmap,str(temp)+' C', (int(newWidth/2)+10, int(newHeight/2)-10),\
+		cv2.putText(heatmap,str(temp)+' C', (cross_x+10, cross_y-10),\
 		cv2.FONT_HERSHEY_SIMPLEX, 0.45,(0, 255, 255), 1, cv2.LINE_AA)
 
 		if hud==True:
@@ -339,12 +368,21 @@ while(cap.isOpened()):
 			videoOut = rec()
 			recording = True
 			start = time.time()
-		if keyPress == ord('t'): #f to finish reording
+
+		if keyPress == ord("t"): #f to finish reording
 			recording = False
 			elapsed = "00:00:00"
 
-		if keyPress == ord('p'): #f to finish reording
+		if keyPress == ord("p"): #f to finish reording
 			snaptime = snapshot(heatmap)
+
+		if keyPress == ord("g"):
+			if graph_enabled:
+				graph_enabled = False
+				plt.close()
+			else:
+				graph_enabled = True
+				plt.figure()
 
 		if keyPress == ord('q'):
 			break
