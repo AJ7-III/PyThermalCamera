@@ -23,6 +23,7 @@ print('r t: Record and Stop')
 print('p : Snapshot')
 print('m : Cycle through ColorMaps')
 print('h : Toggle HUD')
+print('Esc : Quit')
 
 import cv2
 import numpy as np
@@ -346,8 +347,8 @@ while(cap.isOpened()):
 		if keyPress == ord('p'): #f to finish reording
 			snaptime = snapshot(heatmap)
 
-		if keyPress == ord('q'):
+		if keyPress == 27:  # Esc key
 			break
-			capture.release()
-			cv2.destroyAllWindows()
 		
+cap.release()
+cv2.destroyAllWindows()

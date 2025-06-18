@@ -103,6 +103,7 @@ Error checking will be implemented after I refactor and optimize the code!
 - m : Cycle through ColorMaps
   
 - h : Toggle HUD
+- Esc : Quit
 
 
 
