@@ -39,6 +39,8 @@ The following features have been implemented:
 - Average Scene Temperature.
 - Center of scene temperature monitoring (Crosshairs).
 - Floating Maximum and Minimum temperature values within the scene, with variable threshold.
+- Click on the image to measure temperature at arbitrary points.
+- Graph of selected temperature over time (toggle with g key).
 - Video recording is implemented (saved as AVI in the working directory).
 - Snapshot images are implemented (saved as PNG in the working directory).
 
@@ -103,6 +105,7 @@ Error checking will be implemented after I refactor and optimize the code!
 - m : Cycle through ColorMaps
   
 - h : Toggle HUD
+- g : Toggle Graph display
 
 
 
@@ -110,7 +113,4 @@ Error checking will be implemented after I refactor and optimize the code!
 
 - No Error checking is implemented!
 - No attempt has been made to refactor the code (Yet!)!
-- The code would benefit from threading especially on low speed but multicore architectures like the Pi!
-- I might add a graph.
-- I may add the ability to arbitrarily measure points.
 
