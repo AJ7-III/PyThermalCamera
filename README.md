@@ -106,6 +106,7 @@ Error checking will be implemented after I refactor and optimize the code!
   
 - h : Toggle HUD
 - g : Toggle Graph display
+- Esc : Quit
 
 
 

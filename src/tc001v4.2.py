@@ -24,12 +24,13 @@ print('p : Snapshot')
 print('m : Cycle through ColorMaps')
 print('h : Toggle HUD')
 print('g : Toggle Graph display')
+print('Esc : Quit')
 
 import cv2
 import numpy as np
 import argparse
 import time
-import io
+import io  # retained for backward compatibility, though unused
 import matplotlib.pyplot as plt
 
 #We need to know if we are running on the Pi, because openCV behaves a little oddly on all the builds!
@@ -331,7 +332,7 @@ while(cap.isOpened()):
 			if dispFullscreen == False and isPi == False:
 				cv2.resizeWindow('Thermal', newWidth,newHeight)
 
-		if keyPress == ord('q'): #enable fullscreen
+		if keyPress == 27:  # Esc key #enable fullscreen
 			dispFullscreen = True
 			cv2.namedWindow('Thermal',cv2.WND_PROP_FULLSCREEN)
 			cv2.setWindowProperty('Thermal',cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
@@ -384,8 +385,9 @@ while(cap.isOpened()):
 				graph_enabled = True
 				plt.figure()
 
-		if keyPress == ord('q'):
+		if keyPress == 27:  # Esc key
 			break
-			capture.release()
-			cv2.destroyAllWindows()
 		
+
+cap.release()
+cv2.destroyAllWindows()
